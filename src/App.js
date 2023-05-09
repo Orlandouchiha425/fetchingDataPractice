@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect,useCallback } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
@@ -6,7 +6,7 @@ import "./App.css";
 function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState(null)
+  const [error, setError] = useState(null);
   // function fetchMoviesHandler() {
   //   fetch('https://swapi.dev/api/films/')
   //     .then((response) => {
@@ -24,17 +24,30 @@ const [error, setError] = useState(null)
   //       setMovies(transformedMovies);
   //     });
   // }
-  async function fetchMoviesHandler() {
+
+
+
+  let content = <p>Found No Movies.</p>;
+  if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
+  }
+  if (error) {
+    content = <p>{error}</p>;
+  }
+  if (isLoading) {
+    content = <p>Loading...</p>;
+  }
+
+  const fetchMoviesHandler =useCallback(async () =>{
     setIsLoading(true);
-    setError(null)
-    try{
+    setError(null);
+    try {
       const response = await fetch("https://swapi.dev/api/films/");
-      if(!response.ok){
-        throw new Error('Something went wrong!')
+      if (!response.ok) {
+        throw new Error("Something went wrong!");
       }
       const data = await response.json();
 
-       
       const transformedMovies = data.results.map((movieData) => {
         return {
           id: movieData.episode_id,
@@ -44,12 +57,16 @@ const [error, setError] = useState(null)
         };
       });
       setMovies(transformedMovies);
-    }catch(error){
-      setError(error.message)
+    } catch (error) {
+      setError(error.message);
     }
-    setIsLoading(false)
+    setIsLoading(false);
+  },[])
 
-  }
+  useEffect(() =>{
+    fetchMoviesHandler()
+  },[fetchMoviesHandler])
+
 
   return (
     <React.Fragment>
@@ -57,10 +74,11 @@ const [error, setError] = useState(null)
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
       <section>
-        {!isLoading && movies.length >0 && <MoviesList movies={movies} />}
+        {content}
+        {/* {!isLoading && movies.length >0 && <MoviesList movies={movies} />}
         {!isLoading && movies.length ===0 && !error && <p>Found No Movies.</p>}
         {!isLoading && error && <p>{error}</p>}
-        {isLoading && <p>Loading....</p>}
+        {isLoading && <p>Loading....</p>} */}
       </section>
     </React.Fragment>
   );
